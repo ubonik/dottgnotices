@@ -1,0 +1,14 @@
+{
+    "name": "prestashop/dottgnotices",
+    "description": "",
+    "autoload": {
+      "psr-4": {
+        "PrestaShop\\Module\\Dottgnotices\\": "src/"                
+      }
+    },
+    "config": {
+        "prepend-autoloader": false
+    },
+    "type": "prestashop-module"
+  }
+  

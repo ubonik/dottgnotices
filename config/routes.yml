@@ -1,0 +1,9 @@
+dottgnotices_config_form:
+  path: /dottgnotices/configuration
+  methods: [GET, POST]
+  defaults:
+    _controller: 'PrestaShop\Module\Dottgnotices\Controller\DottgnoticesConfigController::index'
+    # Needed to work with tab system
+    _legacy_controller: AdminDottgnoticesConfig
+    _legacy_link: AdminDottgnoticesConfig
+  
