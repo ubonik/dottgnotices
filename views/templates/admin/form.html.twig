@@ -1,7 +1,7 @@
 {% extends '@PrestaShop/Admin/layout.html.twig' %}
 
 {% block content %}
-
+<a class="btn btn-secondary" href="{{ path('dottgnotices_auth')}}">{{'Auth url'|trans( {}, 'Modules.Migratorvmps.Admin') }}</a>
   {{ form_start(dottgnoticesConfigForm) }}
   <div class="card">
     <h3 class="card-header">
