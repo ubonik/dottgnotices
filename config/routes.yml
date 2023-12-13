@@ -6,4 +6,12 @@ dottgnotices_config_form:
     # Needed to work with tab system
     _legacy_controller: AdminDottgnoticesConfig
     _legacy_link: AdminDottgnoticesConfig
+dottgnotices_auth:
+  path: /dottgnotices/auth
+  methods: [GET, POST]
+  defaults:
+    _controller: 'PrestaShop\Module\Dottgnotices\Controller\MainController::authAction'
+     # Needed to work with tab system
+    _legacy_controller: AdminDottgnoticesAuth
+    _legacy_link: AdminDottgnoticesAuth    
   
