@@ -27,5 +27,12 @@ services:
       - '@prestashop.module.dottgnotices.form.configuration_text_form_data_provider'
       - 'PrestaShop\Module\Dottgnotices\Form\ConfigurationFormType'
       - 'Configuration'
+
+  prestashop.module.dottgnotices.service.bank:
+    class: 'PrestaShop\Module\Dottgnotices\Service\DotBank'
+    arguments: ['@prestashop.adapter.legacy.configuration']
+     
+
+
   
    
