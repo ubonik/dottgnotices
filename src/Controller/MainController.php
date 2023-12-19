@@ -13,13 +13,8 @@ class MainController extends FrameworkBundleAdminController
     {
         $bank = $this->get('prestashop.module.test.service.bank');
         $authUrl = $bank->authorize(); 
-
-        header("Location: $authUrl");
-        exit;
-
-        return $this->render('@Modules/dottgnotices/views/templates/admin/auth.html.twig', [
-            'string' => 'test'
-        ]);
+        
+        return $this->redirect($authUrl);
     }
-
+    
 }
