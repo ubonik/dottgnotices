@@ -1,0 +1,12 @@
+services:
+  _defaults:
+    public: true
+    
+  prestashop.module.dottgnotices.service.bank:
+    class: 'PrestaShop\Module\Dottgnotices\Service\DotBank'
+    arguments: ['@prestashop.adapter.legacy.configuration']
+     
+
+
+  
+   
