@@ -11,7 +11,7 @@ class MainController extends FrameworkBundleAdminController
 {
     public function authAction(Request $request): Response
     {
-        $bank = $this->get('prestashop.module.test.service.bank');
+        $bank = $this->get('prestashop.module.dottgnotices.service.authorization_bank');
         $authUrl = $bank->authorize(); 
         
         return $this->redirect($authUrl);
