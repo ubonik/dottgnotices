@@ -4,7 +4,11 @@ services:
     
   prestashop.module.dottgnotices.service.authorization_bank:
     class: 'PrestaShop\Module\Dottgnotices\Service\AuthorizationBank'
-    arguments: ['@prestashop.adapter.legacy.configuration'] 
+    arguments: ['@prestashop.adapter.legacy.configuration']
+
+  prestashop.module.dottgnotices.service.receiving_incoming_messages:
+    class: 'PrestaShop\Module\Dottgnotices\Service\ReceivingIncomingMessages'
+    arguments: ['@prestashop.adapter.legacy.configuration']   
 
 
   
