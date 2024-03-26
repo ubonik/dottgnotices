@@ -53,7 +53,7 @@ class AuthorizationBank
 		return $this->getRedirectBankAuthorization($authToken);
 	}
 
-	 private function getAuthToken(): string {
+	private function getAuthToken(): string {
 		$url = 'https://enter.tochka.com/connect/token';
 		$data = array(
 			'client_id' => $this->clientId,
@@ -118,5 +118,72 @@ class AuthorizationBank
 		$redirectUrl = $this->receiveCodeUrl;
 		return "https://enter.tochka.com/connect/authorize?client_id=$client_id&response_type=$response_type&state=$state&redirect_uri=$redirectUrl&scope=$scope&consent_id=$consentId";
 	}
+
+	/**	 
+	 * @param string
+	 * @return string
+	 */
+	public function receiveAuthCode(string $code, string $afterAuthUrl): string {
+		$url = 'https://enter.tochka.com/connect/token';
+		$data = array(
+			'client_id' => $this->clientId,
+			'client_secret' => $this->clientSecret,
+			'grant_type' => 'authorization_code',
+			'scope' => $this->scope,
+			'code' => $code,
+			'redirect_uri' => $this->receiveCodeUrl,
+		);
+		$options = array(
+			CURLOPT_URL => $url,
+			CURLOPT_POST => true,
+			CURLOPT_POSTFIELDS => http_build_query($data),
+			CURLOPT_HTTPHEADER => array('Content-Type: application/x-www-form-urlencoded'),
+			CURLOPT_RETURNTRANSFER => true
+		);
+
+		$ch2 = curl_init();
+		curl_setopt_array($ch2, $options);
+		$response = curl_exec($ch2);
+		$data = json_decode($response, true);
+		$this->saveAccessTokens($data);
+		return $afterAuthUrl;
+	}
 	
+	private function saveAccessTokens(array $data): void {
+		// echo '<pre>'.print_r($data, true).'</pre>';		 
+		if (
+			!isset($data['refresh_token']) ||
+			!isset($data['access_token'])
+		) {
+			throw new Error('Ошибка сохранения Access Tokens');
+		}
+		$expiresTime = $data['expires_in'] ?? 86400;
+		$expiresTime = time() + (int)$expiresTime;
+		$content = "<?php\r\n";
+		$content .= "\$refreshToken='" . $data['refresh_token'] . "';\r\n";
+		$content .= "\$accessToken='" . $data['access_token'] . "';\r\n";
+		$content .= "\$expiresTime='" . $expiresTime . "';\r\n";
+		file_put_contents($this->accessTokensFile, $content);
+	}
+
+	/**	
+	 * @return array
+	 */
+	private function loadAccessTokens(): array {
+		include $this->accessTokensFile;
+		if (
+			!isset($refreshToken) ||
+			!isset($accessToken) ||
+			!isset($expiresTime)
+		) {
+			return [];
+		}
+		$this->accessToken = $accessToken;
+		return [
+			'refreshToken' => $refreshToken,
+			'accessToken' => $accessToken,
+			'expiresTime' => (int)$expiresTime,
+			'expires' => date('Y-m-d H-i-s', (int)$expiresTime)
+		];
+	}	
 }
