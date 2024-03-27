@@ -53,6 +53,49 @@ class AuthorizationBank
 		return $this->getRedirectBankAuthorization($authToken);
 	}
 
+	/**
+	 *
+	 * @return bool
+	 */
+	public function checkAuthorization(): bool {
+		[
+			'accessToken' => $accessToken
+		] = $this->loadAccessTokens();
+		if (!$accessToken) {
+			return false;
+		}
+		$url = 'https://enter.tochka.com/connect/introspect';
+		$data = array(
+			'access_token' => $accessToken
+		);
+		$options = array(
+			CURLOPT_URL => $url,
+			CURLOPT_POST => true,
+			CURLOPT_POSTFIELDS => http_build_query($data),
+			CURLOPT_HTTPHEADER => array('Content-Type: application/x-www-form-urlencoded'),
+			CURLOPT_RETURNTRANSFER => true
+		);
+		curl_setopt_array($this->ch, $options);
+		$response = curl_exec($this->ch);
+		$payload = $this->decodeJWT($response);
+		if (!isset($payload['aud'])) {
+			return false;
+		}
+		$aud = $payload['aud'];
+		return $aud == $this->clientId;
+	}
+
+	/**
+	 * @param $jwt string
+	 * @return array
+	 */
+	private function decodeJWT(string $jwt): ?array {
+		$parts = explode('.', $jwt);
+		if(isset($parts[1])) {
+		    return json_decode(base64_decode($parts[1]), true);
+	    }
+	}
+
 	private function getAuthToken(): string {
 		$url = 'https://enter.tochka.com/connect/token';
 		$data = array(
@@ -149,8 +192,7 @@ class AuthorizationBank
 		return $afterAuthUrl;
 	}
 	
-	private function saveAccessTokens(array $data): void {
-		// echo '<pre>'.print_r($data, true).'</pre>';		 
+	private function saveAccessTokens(array $data): void { 
 		if (
 			!isset($data['refresh_token']) ||
 			!isset($data['access_token'])
@@ -186,4 +228,89 @@ class AuthorizationBank
 			'expires' => date('Y-m-d H-i-s', (int)$expiresTime)
 		];
 	}	
+
+	public function createWebHook(): bool {
+		if (self::checkWebHooks()) {
+			return false;
+		}
+		$url = 'https://enter.tochka.com/uapi/webhook/' . $this->apiVersion . '/' . $this->clientId;
+		$authorizationToken = 'Bearer ' . $this->accessToken;
+		$data = [
+			'webhooksList' => $this->webhooksList,
+			'url' => $this->webhookUrl,
+		];
+		$jsonData = json_encode($data);
+		$options = array(
+			CURLOPT_URL => $url,
+			CURLOPT_CUSTOMREQUEST => 'PUT',
+			CURLOPT_POSTFIELDS => $jsonData,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_HTTPHEADER => [
+				'Authorization: ' . $authorizationToken,
+				'Content-Type: application/json'
+			],
+		);
+		curl_setopt_array($this->ch, $options);
+		$response = curl_exec($this->ch);
+		$data = json_decode($response, true);
+		if (isset($data['Data']) && isset($data['Data']['webhooksList'])) {
+			$ResponsesList = $data['Data']['webhooksList'];
+			$incoming = count($this->webhooksList);
+			foreach ($this->webhooksList as $webhook) {
+				if (in_array($webhook, $ResponsesList)) {
+					$incoming--;
+				}
+			}
+			return $incoming == 0;
+		}
+		return false;
+	}
+
+	public function deleteWebHook(): bool {
+		$url = 'https://enter.tochka.com/uapi/webhook/' . $this->apiVersion . '/' . $this->clientId;
+		$authorizationToken = 'Bearer ' . $this->accessToken;
+		$options = array(
+			CURLOPT_URL => $url,
+			CURLOPT_CUSTOMREQUEST => 'DELETE',
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_HTTPHEADER => [
+				'Authorization: ' . $authorizationToken,
+			],
+		);
+		curl_setopt_array($this->ch, $options);
+		$response = curl_exec($this->ch);
+		$data = json_decode($response, true);
+		if (isset($data['Data']) && isset($data['Data']['result'])) {
+			return $data['Data']['result'] == '1';
+		}
+		return false;
+	}
+
+	public function checkWebHooks(): bool {
+		$url = 'https://enter.tochka.com/uapi/webhook/' . $this->apiVersion . '/' . $this->clientId;
+		$authorizationToken = 'Bearer ' . $this->accessToken;
+		$options = array(
+			CURLOPT_URL => $url,
+			CURLOPT_CUSTOMREQUEST => 'GET',
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_HTTPHEADER => [
+				'Authorization: ' . $authorizationToken,
+			],
+		);
+		curl_setopt_array($this->ch, $options);
+		$response = curl_exec($this->ch);
+		$data = json_decode($response, true);
+		if (isset($data['Data']) && isset($data['Data']['webhooksList']) && isset($data['Data']['url'])) {
+			$ResponsesList = $data['Data']['webhooksList'];
+			$incoming = count($this->webhooksList);
+			foreach ($this->webhooksList as $webhook) {
+				if (in_array($webhook, $ResponsesList)) {
+					$incoming--;
+				}
+			}
+			return $incoming == 0 && $data['Data']['url'] == $this->webhookUrl;
+		}
+		return false;
+	}
+
 }

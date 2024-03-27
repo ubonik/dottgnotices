@@ -13,5 +13,13 @@ dottgnotices_auth:
     _controller: 'PrestaShop\Module\Dottgnotices\Controller\MainController::authAction'
      # Needed to work with tab system
     _legacy_controller: AdminDottgnoticesAuth
-    _legacy_link: AdminDottgnoticesAuth    
+    _legacy_link: AdminDottgnoticesAuth
+dottgnotices_create_webhook:
+  path: /dottgnotices/create_webhook
+  methods: [GET, POST]
+  defaults:
+    _controller: 'PrestaShop\Module\Dottgnotices\Controller\MainController::createWebhook'
+     # Needed to work with tab system
+    _legacy_controller: AdminDottgnoticesCreateWebhook
+    _legacy_link: AdminDottgnoticesCreateWebhook        
   
