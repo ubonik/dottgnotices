@@ -11,12 +11,12 @@ class DottgnoticesAuthModuleFrontController extends ModuleFrontController
         if (isset($_GET['code'])) {
             $code = $_GET['code'];
 
-            file_put_contents(__DIR__ . '/auth.txt', print_r($code, true));
+           // file_put_contents(__DIR__ . '/auth.txt', print_r($code, true));
 
             $bank = $this->context->controller->getContainer()
                 ->get('prestashop.module.dottgnotices.service.authorization_bank');
                 
-            $redirect = $bank->receiveAuthCode($code, Tools::getAdminUrl());
+            $redirect = $bank->receiveAuthCode($code);
 
             Tools::redirect($redirect);         
         }
