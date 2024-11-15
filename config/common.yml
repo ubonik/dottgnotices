@@ -10,6 +10,8 @@ services:
     class: 'PrestaShop\Module\Dottgnotices\Service\ReceivingIncomingMessages'
     arguments: ['@prestashop.adapter.legacy.configuration']   
 
-
+  prestashop.module.dottgnotices.service.webhook:
+    class: 'PrestaShop\Module\Dottgnotices\Service\WebHook'
+    arguments: ['@prestashop.adapter.legacy.configuration']
   
    
