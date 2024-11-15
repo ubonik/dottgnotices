@@ -11,26 +11,15 @@ use PrestaShop\PrestaShop\Core\ConfigurationInterface;
 class AuthorizationBank
 {
     private $configuration;
-	private $ch; 
-	private $apiVersion = 'v2.0';
+	private $ch;
+	private $domain;
 	private $clientId;
 	private $clientSecret;
-	private $receiveCodeUrl;	
-	private $webhookUrl;	
-	private $webhooksList = [
-		'incomingPayment',
-		'incomingSbpPayment',
-	];
+	private $receiveCodeUrl = "/module/dottgnotices/auth";
+	private $afterAuthUrl =  "/module/dottgnotices/afterauth";		
 	private $scope = 'statements';
-	private $configFile = 'config.php';
 	private $accessTokensFile = __DIR__ . '/access_tokens.php';
 	private $accessToken;
-	private $incomingPaymentLog = false;
-	private $incomingPaymentLogFile = __DIR__ . 'incoming_payment_log.txt';
-	private $incomingPaymentAccounts;
-	private $incomingPaymentAmountLimit = 0;
-	private $telegramBotToken;
-	private $telegramBotTokenChannelId;
 
 	public function __construct(ConfigurationInterface $configuration) {
         $this->configuration = $configuration;
@@ -39,13 +28,9 @@ class AuthorizationBank
 	}
 
 	private function setConfig(): void {
+		$this->domain = $this->configuration->get('DOTTGNOTICES_DOMAIN');
 		$this->clientId = $this->configuration->get('DOTTGNOTICES_CLIENT_ID');
 		$this->clientSecret = $this->configuration->get('DOTTGNOTICES_CLIENT_SECRET');
-		$this->receiveCodeUrl = $this->configuration->get('DOTTGNOTICES_REDIRECT_URL');
-		$this->webhookUrl = $this->configuration->get('DOTTGNOTICES_WEBHOOK_URL');
-		$this->incomingPaymentAccounts = $this->configuration->get('DOTTGNOTICES_PAYMENT_ACCOUNT');
-		$this->telegramBotToken = $this->configuration->get('DOTTGNOTICES_TELEGRAM_BOT_TOKEN');		
-		$this->telegramBotTokenChannelId  = $this->configuration->get('DOTTGNOTICES_TELEGRAM_CHANNEL_ID');
 	}
 	
     public function authorize(): string {
@@ -158,7 +143,7 @@ class AuthorizationBank
 		$response_type = 'code';
 		$state = 'Authorization';
 		$scope = rawurlencode($this->scope);
-		$redirectUrl = $this->receiveCodeUrl;
+		$redirectUrl = $this->domain . $this->receiveCodeUrl;
 		return "https://enter.tochka.com/connect/authorize?client_id=$client_id&response_type=$response_type&state=$state&redirect_uri=$redirectUrl&scope=$scope&consent_id=$consentId";
 	}
 
@@ -166,7 +151,7 @@ class AuthorizationBank
 	 * @param string
 	 * @return string
 	 */
-	public function receiveAuthCode(string $code, string $afterAuthUrl): string {
+	public function receiveAuthCode(string $code): string {
 		$url = 'https://enter.tochka.com/connect/token';
 		$data = array(
 			'client_id' => $this->clientId,
@@ -174,7 +159,7 @@ class AuthorizationBank
 			'grant_type' => 'authorization_code',
 			'scope' => $this->scope,
 			'code' => $code,
-			'redirect_uri' => $this->receiveCodeUrl,
+			'redirect_uri' => $this->domain . $this->receiveCodeUrl,
 		);
 		$options = array(
 			CURLOPT_URL => $url,
@@ -189,7 +174,7 @@ class AuthorizationBank
 		$response = curl_exec($ch2);
 		$data = json_decode($response, true);
 		$this->saveAccessTokens($data);
-		return $afterAuthUrl;
+		return $this->domain . $this->afterAuthUrl;
 	}
 	
 	private function saveAccessTokens(array $data): void { 
@@ -228,89 +213,5 @@ class AuthorizationBank
 			'expires' => date('Y-m-d H-i-s', (int)$expiresTime)
 		];
 	}	
-
-	public function createWebHook(): bool {
-		if (self::checkWebHooks()) {
-			return false;
-		}
-		$url = 'https://enter.tochka.com/uapi/webhook/' . $this->apiVersion . '/' . $this->clientId;
-		$authorizationToken = 'Bearer ' . $this->accessToken;
-		$data = [
-			'webhooksList' => $this->webhooksList,
-			'url' => $this->webhookUrl,
-		];
-		$jsonData = json_encode($data);
-		$options = array(
-			CURLOPT_URL => $url,
-			CURLOPT_CUSTOMREQUEST => 'PUT',
-			CURLOPT_POSTFIELDS => $jsonData,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_HTTPHEADER => [
-				'Authorization: ' . $authorizationToken,
-				'Content-Type: application/json'
-			],
-		);
-		curl_setopt_array($this->ch, $options);
-		$response = curl_exec($this->ch);
-		$data = json_decode($response, true);
-		if (isset($data['Data']) && isset($data['Data']['webhooksList'])) {
-			$ResponsesList = $data['Data']['webhooksList'];
-			$incoming = count($this->webhooksList);
-			foreach ($this->webhooksList as $webhook) {
-				if (in_array($webhook, $ResponsesList)) {
-					$incoming--;
-				}
-			}
-			return $incoming == 0;
-		}
-		return false;
-	}
-
-	public function deleteWebHook(): bool {
-		$url = 'https://enter.tochka.com/uapi/webhook/' . $this->apiVersion . '/' . $this->clientId;
-		$authorizationToken = 'Bearer ' . $this->accessToken;
-		$options = array(
-			CURLOPT_URL => $url,
-			CURLOPT_CUSTOMREQUEST => 'DELETE',
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_HTTPHEADER => [
-				'Authorization: ' . $authorizationToken,
-			],
-		);
-		curl_setopt_array($this->ch, $options);
-		$response = curl_exec($this->ch);
-		$data = json_decode($response, true);
-		if (isset($data['Data']) && isset($data['Data']['result'])) {
-			return $data['Data']['result'] == '1';
-		}
-		return false;
-	}
-
-	public function checkWebHooks(): bool {
-		$url = 'https://enter.tochka.com/uapi/webhook/' . $this->apiVersion . '/' . $this->clientId;
-		$authorizationToken = 'Bearer ' . $this->accessToken;
-		$options = array(
-			CURLOPT_URL => $url,
-			CURLOPT_CUSTOMREQUEST => 'GET',
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_HTTPHEADER => [
-				'Authorization: ' . $authorizationToken,
-			],
-		);
-		curl_setopt_array($this->ch, $options);
-		$response = curl_exec($this->ch);
-		$data = json_decode($response, true);
-		if (isset($data['Data']) && isset($data['Data']['webhooksList']) && isset($data['Data']['url'])) {
-			$ResponsesList = $data['Data']['webhooksList'];
-			$incoming = count($this->webhooksList);
-			foreach ($this->webhooksList as $webhook) {
-				if (in_array($webhook, $ResponsesList)) {
-					$incoming--;
-				}
-			}
-			return $incoming == 0 && $data['Data']['url'] == $this->webhookUrl;
-		}
-		return false;
-	}
 
 }
