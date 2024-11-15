@@ -13,17 +13,14 @@ class ConfigurationFormType extends TranslatorAwareType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('domain', TextType::class, [
+                'label' => $this->trans('Адрес домена (Domain)', 'Modules.DemoSymfonyFormSimple.Admin'),                
+            ])       
             ->add('client_id', TextType::class, [
                 'label' => $this->trans('Идентификатор приложения (Client Id)', 'Modules.DemoSymfonyFormSimple.Admin'),                
             ])
             ->add('client_secret', TextType::class, [
                 'label' => $this->trans('Пароль приложения (Client Secret)', 'Modules.DemoSymfonyFormSimple.Admin'),                
-            ])
-            ->add('redirect_url', TextType::class, [
-                'label' => $this->trans('Redirect Url', 'Modules.DemoSymfonyFormSimple.Admin'),               
-            ])
-            ->add('webhook_url', TextType::class, [
-                'label' => $this->trans('Url для уведомлений банка (webhook Url)', 'Modules.DemoSymfonyFormSimple.Admin'),               
             ])
             ->add('payment_account', TextType::class, [
                 'label' => $this->trans('Расчетный счет', 'Modules.DemoSymfonyFormSimple.Admin'),               

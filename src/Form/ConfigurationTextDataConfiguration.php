@@ -30,10 +30,9 @@ use PrestaShop\PrestaShop\Core\ConfigurationInterface;
  */
 final class ConfigurationTextDataConfiguration implements DataConfigurationInterface
 {
+    public const DOTTGNOTICES_DOMAIN = 'DOTTGNOTICES_DOMAIN';
     public const DOTTGNOTICES_CLIENT_ID = 'DOTTGNOTICES_CLIENT_ID';
     public const DOTTGNOTICES_CLIENT_SECRET = 'DOTTGNOTICES_CLIENT_SECRET';
-    public const DOTTGNOTICES_REDIRECT_URL = 'DOTTGNOTICES_REDIRECT_URL';
-    public const DOTTGNOTICES_WEBHOOK_URL = 'DOTTGNOTICES_WEBHOOK_URL';
     public const DOTTGNOTICES_PAYMENT_ACCOUNT = 'DOTTGNOTICES_PAYMENT_ACCOUNT';
     public const DOTTGNOTICES_TELEGRAM_BOT_TOKEN = 'DOTTGNOTICES_TELEGRAM_BOT_TOKEN';
     public const DOTTGNOTICES_TELEGRAM_CHANNEL_ID = 'DOTTGNOTICES_TELEGRAM_CHANNEL_ID';    
@@ -51,11 +50,9 @@ final class ConfigurationTextDataConfiguration implements DataConfigurationInter
     public function getConfiguration(): array
     {
         $return = [];
-
+        $return['domain'] = $this->configuration->get(static::DOTTGNOTICES_DOMAIN);
         $return['client_id'] = $this->configuration->get(static::DOTTGNOTICES_CLIENT_ID);
         $return['client_secret'] = $this->configuration->get(static::DOTTGNOTICES_CLIENT_SECRET);
-        $return['redirect_url'] = $this->configuration->get(static::DOTTGNOTICES_REDIRECT_URL);
-        $return['webhook_url'] = $this->configuration->get(static::DOTTGNOTICES_WEBHOOK_URL);
         $return['payment_account'] = $this->configuration->get(static::DOTTGNOTICES_PAYMENT_ACCOUNT);
         $return['telegram_bot_token'] = $this->configuration->get(static::DOTTGNOTICES_TELEGRAM_BOT_TOKEN);
         $return['telegram_channel_id'] = $this->configuration->get(static::DOTTGNOTICES_TELEGRAM_CHANNEL_ID);        
@@ -66,11 +63,9 @@ final class ConfigurationTextDataConfiguration implements DataConfigurationInter
     public function updateConfiguration(array $configuration): array
     {
         $errors = [];
-
+        $this->configuration->set(static::DOTTGNOTICES_DOMAIN, $configuration['domain']);
         $this->configuration->set(static::DOTTGNOTICES_CLIENT_ID, $configuration['client_id']);
         $this->configuration->set(static::DOTTGNOTICES_CLIENT_SECRET, $configuration['client_secret']);
-        $this->configuration->set(static::DOTTGNOTICES_REDIRECT_URL, $configuration['redirect_url']);
-        $this->configuration->set(static::DOTTGNOTICES_WEBHOOK_URL, $configuration['webhook_url']);
         $this->configuration->set(static::DOTTGNOTICES_PAYMENT_ACCOUNT, $configuration['payment_account']);
         $this->configuration->set(static::DOTTGNOTICES_TELEGRAM_BOT_TOKEN, $configuration['telegram_bot_token']);
         $this->configuration->set(static::DOTTGNOTICES_TELEGRAM_CHANNEL_ID, $configuration['telegram_channel_id']);
