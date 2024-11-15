@@ -13,17 +13,13 @@ class ReceivingIncomingMessages
 {
     private $configuration;
 	private $ch;
-	private $apiVersion = 'v2.0';	
-		private $webhooksList = [
-		'incomingPayment',
-		'incomingSbpPayment',
-	];
-	private $scope = 'statements';
 	private $incomingPaymentLog = true;
 	private $incomingPaymentLogFile = __DIR__ .'dottgnotices_log.txt';
-	private $incomingPaymentAccounts = [];
 	private $telegramBotToken;
 	private $telegramBotTokenChannelId;	
+	//private $incomingPaymentAmountLimit = 0;
+
+
 
 	public function __construct(ConfigurationInterface $configuration) {
 		$this->ch = curl_init();
@@ -35,7 +31,7 @@ class ReceivingIncomingMessages
 	 * @return void
 	 */	
 	private function setConfig(): void {
-		$this->incomingPaymentAccounts[] = $this->configuration->get('DOTTGNOTICES_PAYMENT_ACCOUNT');
+		//$this->incomingPaymentAccounts[] = $this->configuration->get('DOTTGNOTICES_PAYMENT_ACCOUNT');
 		$this->telegramBotToken = $this->configuration->get('DOTTGNOTICES_TELEGRAM_BOT_TOKEN');		
 		$this->telegramBotTokenChannelId  = $this->configuration->get('DOTTGNOTICES_TELEGRAM_CHANNEL_ID');
 	}
